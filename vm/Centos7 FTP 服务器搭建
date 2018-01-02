@@ -1,0 +1,123 @@
+Centos7 FTP 服务器搭建
+
+vsftpd (very secure FTP daemon)：FTP（file transfer protocol 文件传输协议）服务器需要安装vsftp服务端软件，在建立vsftpd用户时，我们一般是在linux下建立用户useradd的方式来访问ftp，但有时我们只想提供ftp服务，而避免用户用ftp的帐号去登录linux，采用一般的方式只能是限制该用户的访问权限，但还是避免不了用户登录进linux系统，所以比较好的方法是用vsftpd的虚拟用户（virtual users）。
+
+一、安装vsftpd
+1.检查Centos 7 有没有安装vsftp
+rpm -q vsftpd 
+
+2.如果没有显示vsftpd信息，表示没安装，运行命令安装
+yum install -y vsftpd
+
+3.启动vsftpd
+systemctl start vsftpd.service
+
+4.设置vsftpd开机启动
+systemctl enable vsftpd.service
+
+PS:此时可以使用ftp客户端匿名登录
+
+二、配置vsftpd.conf
+1.备份配置文件 
+cp /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf.bak
+
+2.执行以下命令
+sed -i "s/anonymous_enable=YES/anonymous_enable=NO/g" '/etc/vsftpd/vsftpd.conf'
+sed -i "s/#anon_upload_enable=YES/anon_upload_enable=NO/g" '/etc/vsftpd/vsftpd.conf'
+sed -i "s/#anon_mkdir_write_enable=YES/anon_mkdir_write_enable=YES/g" '/etc/vsftpd/vsftpd.conf'
+sed -i "s/#chown_uploads=YES/chown_uploads=NO/g" '/etc/vsftpd/vsftpd.conf'
+sed -i "s/#async_abor_enable=YES/async_abor_enable=YES/g" '/etc/vsftpd/vsftpd.conf'
+sed -i "s/#ascii_upload_enable=YES/ascii_upload_enable=YES/g" '/etc/vsftpd/vsftpd.conf'
+sed -i "s/#ascii_download_enable=YES/ascii_download_enable=YES/g" '/etc/vsftpd/vsftpd.conf'
+sed -i "s/#ftpd_banner=Welcome to blah FTP service./ftpd_banner=Welcome to FTP service./g" '/etc/vsftpd/vsftpd.conf'
+
+3.添加下列内容到vsftpd.conf末尾
+use_localtime=YES
+listen_port=21
+chroot_local_user=YES
+idle_session_timeout=300
+guest_enable=YES
+guest_username=vsftpd
+user_config_dir=/etc/vsftpd/vconf
+data_connection_timeout=1
+virtual_use_local_privs=YES
+pasv_min_port=10060
+pasv_max_port=10090
+accept_timeout=5
+connect_timeout=1
+allow_writeable_chroot=YES
+
+三、建立用户文件
+1.第一行用户名，第二行密码，不能使用root为用户名
+vim /etc/vsftpd/virtusers
+
+2.生成用户数据文件
+db_load -T -t hash -f /etc/vsftpd/virtusers /etc/vsftpd/virtusers.db
+
+3.设定PAM验证文件，并指定对虚拟用户数据库文件进行读取
+chmod 600 /etc/vsftpd/virtusers.db
+
+四、修改/etc/pam.d/vsftpd文件
+1.备份
+cp /etc/pam.d/vsftpd /etc/pam.d/vsftpd.bak
+
+2.将auth及account的所有配置行均注释掉
+vi /etc/pam.d/vsftpd
+auth sufficient /lib64/security/pam_userdb.so db=/etc/vsftpd/virtusers
+account sufficient /lib64/security/pam_userdb.so db=/etc/vsftpd/virtusers
+ps：如果系统为32位，上面lib64改为lib
+
+五、新建系统用户vsftpd，需使之不能登录系统，设置目录所有者
+useradd vsftpd -d /home/vsftpd -s /bin/false
+chown -R vsftpd:vsftpd /home/vsftpd
+
+六、建立虚拟用户个人配置文件
+1.创建放配置文件目录
+mkdir /etc/vsftpd/vconf
+cd /etc/vsftpd/vconf
+
+2.建立虚拟用户配合文件(上面创建多少用户就建多少个)
+touch user1 user2 ...
+
+3.建立用户根目录
+mkdir -p /home/vsftpd/user1/
+mkdir -p /home/vsftpd/user2/
+...
+
+4.编辑user1用户配置文件，内容如下，其他用户类似
+vi user1
+local_root=/home/vsftpd/user1/
+write_enable=YES
+anon_world_readable_only=NO
+anon_upload_enable=YES
+anon_mkdir_write_enable=YES
+anon_other_write_enable=YES
+
+ps：其他用户重复4
+
+七、重启服务
+service vsftpd restart
+
+
+
+配置防火墙开启FTP服务器需要的端口
+CentOS 7.0默认使用的是firewall作为防火墙，这里改为iptables防火墙。
+1.关闭firewall
+systemctl stop firewalld.service 停止firewall
+systemctl disable firewalld.service 禁止firewall开机启动
+
+2.安装iptables防火墙
+yum install iptables-services 安装
+vim /etc/sysconfig/iptables 编辑防火墙配置文件，添加下面红色部分进入iptables，说明：21端口是ftp服务端口；10060到10090是Vsftpd被动模式需要的端口，可自定义一段大于1024的tcp端口 
+-A INPUT -m state –state NEW -m tcp -p tcp –dport 21 -j ACCEPT 
+-A INPUT -m state –state NEW -m tcp -p tcp –dport 10060:10090 -j ACCEPT
+systemctl restart iptables.service 最后重启防火墙使配置生效
+systemctl enable iptables.service 设置防火墙开机启动
+
+关闭SELINUX
+vim /etc/selinux/config 
+#SELINUX=enforcing #注释掉 
+#SELINUXTYPE=targeted #注释掉 
+SELINUX=disabled #增加
+
+setenforce 0 使配置立即生效
