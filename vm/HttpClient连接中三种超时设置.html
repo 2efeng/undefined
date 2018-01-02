@@ -1,0 +1,87 @@
+<!DOCTYPE html><html><head><title>HttpClient连接中三种超时设置</title><meta charset='utf-8'><link href='https://dn-maxiang.qbox.me/res-min/themes/marxico.css' rel='stylesheet'><style></style></head><body><div id='preview-contents' class='note-content'>
+                        
+                    
+
+
+
+<h5 id="httpclient连接中三种超时设置">HttpClient连接中三种超时设置</h5>
+
+<h5 id="第一种">第一种</h5>
+
+<blockquote>
+  <p><strong>ConnectionPoolTimeout：</strong> 定义了从ConnectionManager管理的连接池中取出连接的超时时间。出错会抛出ConnectionPoolTimeoutException</p>
+</blockquote>
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs"><span class="hljs-comment">/* 从连接池中取连接的超时时间 1s*/</span><br>ConnManagerParams.setTimeout(params, <span class="hljs-number">1000</span>); <br></code></pre>
+
+<hr>
+
+<h5 id="第二种">第二种</h5>
+
+<blockquote>
+  <p><strong>ConnectionTimeout：</strong> 定义了通过网络与服务器建立连接的超时时间，Httpclient包中通过一个异步线程去创建与服务器的socket连接，这就是该socket连接的超时时间。当连接HTTP服务器或者等待HttpConnectionManager管理的一个有效连接超时出错会抛出ConnectionTimeoutException</p>
+</blockquote>
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs"><span class="hljs-comment">/*连接超时 2s*/</span><br>HttpConnectionParams.setConnectionTimeout(params, <span class="hljs-number">2000</span>); <br></code></pre>
+
+
+
+<h5 id="连接超时connectiontimeout">连接超时：connectionTimeout</h5>
+
+<h6 id="1指的是连接一个url的连接等待时间">1.指的是连接一个url的连接等待时间。</h6>
+
+
+
+<h6 id="2设置方法为">2.设置方法为：</h6>
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs">HttpClient client = <span class="hljs-keyword">new</span> HttpClient();<br>String testurl = <span class="hljs-string">"http://test.com"</span>;<br>HttpMethod method = <span class="hljs-keyword">new</span> GetMethod(testurl);<br>client.getHttpConnectionManager()<br>    .getParams()<br>    .setConnectionTimeout(<span class="hljs-number">3000</span>);<br>client.getHttpConnectionManager()<br>    .getParams()<br>    .setSoTimeout(<span class="hljs-number">3000</span>);<br><span class="hljs-keyword">try</span> {<br>    <span class="hljs-keyword">int</span> statusCode = client.executeMethod(method);<br>    System.out.println(statusCode);<br>    <span class="hljs-keyword">byte</span>[] responseBody = <span class="hljs-keyword">null</span>;<br>    responseBody = method.getResponseBody();<br>    String result = <span class="hljs-keyword">new</span> String(responseBody);<br>    System.out.println(result);<br>} <span class="hljs-keyword">catch</span> (HttpException e) {<br>    e.printStackTrace();<br>} <span class="hljs-keyword">catch</span> (IOException e) {<br>    e.printStackTrace();<br>}<br></code></pre>
+
+
+
+<h6 id="3测试的时候将url改为一个不存在的testurl">3：测试的时候，将url改为一个不存在的testurl</h6>
+
+
+
+<h6 id="4超时时间3000ms过后系统报出异常">4：超时时间3000ms过后，系统报出异常。</h6>
+
+
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs">org.apache.commons.httpclient.ConnectTimeoutException: The host did not accept the connection within timeout of <span class="hljs-number">3000</span> ms  <br><br>at org.apache.commons.httpclient.protocol.ReflectionSocketFactory.createSocket(ReflectionSocketFactory.java:<span class="hljs-number">155</span>)  <br>at org.apache.commons.httpclient.protocol.DefaultProtocolSocketFactory.createSocket(DefaultProtocolSocketFactory.java:<span class="hljs-number">125</span>)  <br>at org.apache.commons.httpclient.HttpConnection.open(HttpConnection.java:<span class="hljs-number">707</span>)  <br>at org.apache.commons.httpclient.HttpMethodDirector.executeWithRetry(HttpMethodDirector.java:<span class="hljs-number">387</span>)  <br>at org.apache.commons.httpclient.HttpMethodDirector.executeMethod(HttpMethodDirector.java:<span class="hljs-number">171</span>)  <br>at org.apache.commons.httpclient.HttpClient.executeMethod(HttpClient.java:<span class="hljs-number">397</span>)  <br></code></pre>
+
+<hr>
+
+<h5 id="第三种">第三种</h5>
+
+<blockquote>
+  <p><strong>SocketTimeout：</strong> 这定义了Socket读数据的超时时间，即从服务器获取响应数据需要等待的时间。当读取或者接收Socket超时会抛出SocketTimeoutException</p>
+</blockquote>
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs"><span class="hljs-comment">/*请求超时 4s*/</span><br>HttpConnectionParams.setSoTimeout(params, <span class="hljs-number">4000</span>);<br></code></pre>
+
+
+
+<h5 id="读取数据超时sotimeout">读取数据超时：soTimeout</h5>
+
+<h6 id="1指的是连接上一个url获取response的返回等待时间">1.指的是连接上一个url，获取response的返回等待时间。</h6>
+
+
+
+<h6 id="2设置方法">2.设置方法</h6>
+
+
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs">HttpClient client = <span class="hljs-keyword">new</span> HttpClient();<br>String testurl = <span class="hljs-string">"http://test.com"</span>;<br>HttpMethod method = <span class="hljs-keyword">new</span> GetMethod(testurl);<br>client.getHttpConnectionManager().getParams()<br>        .setConnectionTimeout(<span class="hljs-number">3000</span>);<br>client.getHttpConnectionManager().getParams().setSoTimeout(<span class="hljs-number">2000</span>);<br><span class="hljs-keyword">try</span> {<br>    <span class="hljs-keyword">int</span> statusCode = client.executeMethod(method);<br>    System.out.println(statusCode);<br>    <span class="hljs-keyword">byte</span>[] responseBody = <span class="hljs-keyword">null</span>;<br>    responseBody = method.getResponseBody();<br>    String result = <span class="hljs-keyword">new</span> String(responseBody);<br>    System.out.println(result);<br>} <span class="hljs-keyword">catch</span> (HttpException e) {<br>    e.printStackTrace();<br>} <span class="hljs-keyword">catch</span> (IOException e) { <br>    e.printStackTrace();<br>}<br></code></pre>
+
+<h6 id="3测试的时候的连接url为我本地开启的一个url在我这个测试url里当访问到这个链接时线程sleep一段时间来模拟返回response超时">3.测试的时候的连接url为我本地开启的一个url，在我这个测试url里，当访问到这个链接时，线程sleep一段时间，来模拟返回response超时。</h6>
+
+
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs"><span class="hljs-meta">@RequestMapping</span>(params = <span class="hljs-string">"method=test"</span>)  <br><span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">testMethod</span> <span class="hljs-params">(ModelMap model)</span></span>{<br>    <span class="hljs-keyword">try</span> {<br>        Thread.sleep(<span class="hljs-number">3000</span>);<br>    } <span class="hljs-keyword">catch</span> (InterruptedException e) {<br>        <span class="hljs-comment">// TODO Auto-generated catch block  </span><br>        e.printStackTrace();<br>    }<br>    System.out.println(<span class="hljs-string">"call testMethod method."</span>);<br>    model.addAttribute(<span class="hljs-string">"name"</span>, <span class="hljs-string">"test method"</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-string">"test"</span>;<br>}<br></code></pre>
+
+
+
+<h6 id="4将读取response返回超时时间设的时间比那个sleep时间短之后运行程序给出异常">4：将读取response返回超时时间设的时间比那个sleep时间短之后，运行程序给出异常</h6>
+
+
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs">java.net.SocketTimeoutException: Read timed out  <br><br>at java.net.SocketInputStream.socketRead0(Native Method)  <br>at java.net.SocketInputStream.read(Unknown Source)  <br>at java.io.BufferedInputStream.fill(Unknown Source)  <br>at java.io.BufferedInputStream.read(Unknown Source)  <br>at org.apache.commons.httpclient.HttpParser.readRawLine(HttpParser.java:<span class="hljs-number">78</span>)  <br>at org.apache.commons.httpclient.HttpParser.readLine(HttpParser.java:<span class="hljs-number">106</span>)  <br>at org.apache.commons.httpclient.HttpConnection.readLine(HttpConnection.java:<span class="hljs-number">1116</span>)  <br>at org.apache.commons.httpclient.HttpMethodBase.readStatusLine(HttpMethodBase.java:<span class="hljs-number">1973</span>)  <br>at org.apache.commons.httpclient.HttpMethodBase.readResponse(HttpMethodBase.java:<span class="hljs-number">1735</span>)  <br><br></code></pre></div></body></html>

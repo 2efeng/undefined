@@ -1,0 +1,33 @@
+<!DOCTYPE html><html><head><title>HttpClient访问WebService</title><meta charset='utf-8'><link href='https://dn-maxiang.qbox.me/res-min/themes/marxico.css' rel='stylesheet'><style></style></head><body><div id='preview-contents' class='note-content'>
+                        
+                    
+
+<h4 id="httpclient访问webservice">HttpClient访问WebService</h4>
+
+<h5 id="第一种-将所有参数组成json字符串传给服务端">第一种 ：将所有参数组成Json字符串传给服务端</h5>
+
+<h6 id="web-service">Web Service</h6>
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs"><span class="hljs-function"><span class="hljs-keyword">public</span> T <span class="hljs-title">createProduct</span><span class="hljs-params">(String jsonStr)</span> <span class="hljs-keyword">throws</span> ParseException </span>{<br>    JSONObject obj = JSONObject.fromObject(jsonStr);<br>    obj.optLong(<span class="hljs-string">"id"</span>);<br>    obj.optString(<span class="hljs-string">"name"</span>);<br>    String value = obj.optInt(key);<br>    <span class="hljs-keyword">return</span> T;<br>}<br></code></pre>
+
+
+
+<h6 id="client">Client</h6>
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs"> CloseableHttpClient httpClient = HttpClients.createDefault();<br> HttpPost httpPost = <span class="hljs-keyword">new</span> HttpPost(url);<br> StringEntity entity = <span class="hljs-keyword">new</span> StringEntity(StringParam);<br> entity.setContentType(<span class="hljs-string">"application/json"</span>);<br> httpPost.setEntity(entity);<br> HttpResponse response = httpClient.execute(httpPost);<br> <span class="hljs-keyword">if</span> (response != <span class="hljs-keyword">null</span>) {<br>     HttpEntity resEntity = response.getEntity();<br>     <span class="hljs-keyword">if</span> (resEntity != <span class="hljs-keyword">null</span>) {<br>        result = EntityUtils.toString(resEntity);<br>     }<br> }<br></code></pre>
+
+<hr>
+
+
+
+<h5 id="第二种-使用namevaluepair传递参数">第二种 使用NameValuePair传递参数</h5>
+
+<h6 id="web-service-1">Web Service</h6>
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs"><br></code></pre>
+
+<h6 id="client-1">Client</h6>
+
+
+
+<pre class="prettyprint hljs-dark"><code class="language-java hljs">HttpClient client = <span class="hljs-keyword">new</span> DefaultHttpClient();  <br>HttpPost httppost = <span class="hljs-keyword">new</span> HttpPost(url);    <br><span class="hljs-comment">// 创建参数队列      </span><br>List&lt;NameValuePair&gt; formparams = <span class="hljs-keyword">new</span> ArrayList&lt;NameValuePair&gt;();    <br>formparams.add(<span class="hljs-keyword">new</span> BasicNameValuePair(<span class="hljs-string">"username"</span>, <span class="hljs-string">"admin"</span>));    <br>formparams.add(<span class="hljs-keyword">new</span> BasicNameValuePair(<span class="hljs-string">"password"</span>, <span class="hljs-string">"123456"</span>));<br>formparams.add(<span class="hljs-keyword">new</span> BasicNameValuePair(key, value));    <br>UrlEncodedFormEntity uefEntity;    <br><span class="hljs-keyword">try</span> {    <br>    uefEntity = <span class="hljs-keyword">new</span> UrlEncodedFormEntity(formparams, <span class="hljs-string">"UTF-8"</span>);<br>    httppost.setEntity(uefEntity);<br>    System.out.println(<span class="hljs-string">"executing request "</span> + httppost.getURI());<br>    HttpResponse response = client.execute(httppost);<br>    Header[] headers = response.getAllHeaders();<br>    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">0</span>; i&lt;headers.length; i++){<br>        System.out.println(headers[i].getName())<br>    }<br>    <span class="hljs-keyword">try</span> {<br>        HttpEntity entity = response.getEntity();<br>        <span class="hljs-keyword">if</span> (entity != <span class="hljs-keyword">null</span>) {<br>            System.out.println(<span class="hljs-string">"Response content: "</span> <br>            + EntityUtils.toString(entity, <span class="hljs-string">"UTF-8"</span>));  <br>        }<span class="hljs-keyword">finally</span> {<br>        }    <br>     } <span class="hljs-keyword">catch</span> (ClientProtocolException e) {    <br>         e.printStackTrace();    <br>     } <span class="hljs-keyword">catch</span> (UnsupportedEncodingException e1) {    <br>         e1.printStackTrace();    <br>     } <span class="hljs-keyword">catch</span> (IOException e) {    <br>         e.printStackTrace();    <br>     } <span class="hljs-keyword">finally</span> {<br>     }    <br> } <br></code></pre></div></body></html>
