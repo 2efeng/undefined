@@ -1,0 +1,43 @@
+<build>
+    <finalName>${project.artifactId}</finalName>
+    <resources>
+        <!--jar包不包含resource目录下的而文件-->
+        <resource>
+            <directory>src/main/resources</directory>
+            <excludes>
+                <exclude>**/*.xml</exclude>
+                <exclude>**/*.properties</exclude>
+            </excludes>
+            <filtering>true</filtering>
+        </resource>
+    </resources>
+    <plugins>
+        <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+                <descriptorRefs>
+                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+                <archive>
+                    <manifest>
+                        <!-- 添加一个 Class-Path元素到MANIFEST.MF文件，以及在Class-Path元素中包括所有依赖项 -->
+                        <addClasspath>true</addClasspath>
+                        <!-- 所有的依赖项应该位于 lib文件夹  -->  
+                        <classpathPrefix>lib/</classpathPrefix>
+                        <!--设置main函数-->
+                        <mainClass>com.hzf.Test</mainClass>
+                    </manifest>
+                </archive>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>make-assembly</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>single</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
