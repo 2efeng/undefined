@@ -1,0 +1,16 @@
+<!-- 
+第一种方法
+-->
+<properties>
+	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+</properties>
+
+
+<!-- 第二种方法
+1.Window->Preferences->General->Content Types
+修改Java Archive(*.jar)编码为UTF-8
+修改Java Class File编码为UTF-8
+2.File->Preferences->Workspace
+修改Text file encoding编码为UTF-8
+-->
